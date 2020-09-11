@@ -970,7 +970,7 @@ contract Lockable is Context {
   }
 
   /**
-    * @dev Unlock account, only locker can unlock
+    * @dev Unlock account, only owner can unlock
     */
   function _unlock(address account) internal {
     _locks[account] = false;
@@ -988,7 +988,7 @@ contract Lockable is Context {
   }
 
   /**
-    * @dev Remove time lock, only locker can remove
+    * @dev Remove time lock, only owner can remove
     * @param account The address want to know the time lock state.
     * @param index Time lock index
     */
@@ -1052,8 +1052,8 @@ contract Lockable is Context {
   }
 
   /**
-    * @dev Remove time lock, only locker can remove
-    * @param account The address want to know the time lock state.
+    * @dev Remove investor lock, only owner can remove
+    * @param account The address want to know the investor lock state.
     */
   function _removeInvestorLock(address account) internal {
     _investorLocks[account] = InvestorLock(0, 0, 0);
@@ -1061,29 +1061,33 @@ contract Lockable is Context {
   }
 
    /**
-    * @dev Get time lock info
-    * @param account The address want to know the time lock state.
-    * @return time lock info
+    * @dev Get investor lock info
+    * @param account The address want to know the investor lock state.
+    * @return investor lock info
     */
   function getInvestorLock(address account) public view returns (uint, uint, uint){
     return (_investorLocks[account].amount, _investorLocks[account].months, _investorLocks[account].startsAt);
   }
 
   /**
-    * @dev get total investor locked amount of address, locked amount will be released by 100% / months
-    * if months is 5, locked amount released 20% per 1 month, and after 5 months later, all locked amount will be released.
+    * @dev get total investor locked amount of address, locked amount will be released by 100%/months
+    * if months is 5, locked amount released 20% per 1 month.
     * @param account The address want to know the investor lock amount.
     * @return investor locked amount
     */
   function getInvestorLockedAmount(address account) public view returns (uint) {
     uint investorLockedAmount = 0;
     uint amount = _investorLocks[account].amount;
-    uint months = _investorLocks[account].months;
-    uint startsAt = _investorLocks[account].startsAt;
-    uint expiresAt = startsAt.add(months*(31 days));
-
-    if (amount > 0 && block.timestamp > startsAt && block.timestamp < expiresAt) {
-      investorLockedAmount = amount.mul((expiresAt.sub(block.timestamp)).div(31 days).add(1)).div(months);
+    if (amount > 0) {
+      uint months = _investorLocks[account].months;
+      uint startsAt = _investorLocks[account].startsAt;
+      uint expiresAt = startsAt.add(months*(31 days));
+      uint timestamp = block.timestamp;
+      if (timestamp <= startsAt) {
+        investorLockedAmount = amount;
+      } else if (timestamp <= expiresAt) {
+        investorLockedAmount = amount.mul(expiresAt.sub(timestamp).div(31 days).add(1)).div(months);
+      }
     }
     return investorLockedAmount;
   }
@@ -1213,14 +1217,14 @@ contract MTS is Pausable, Ownable, Burnable, Lockable, ERC20 {
   }
 
     /**
-    * @dev only locker can add time lock
+    * @dev only locker can add investor lock
     */
   function addInvestorLock(address account, uint months) public onlyLocker whenNotPaused {
     _addInvestorLock(account, balanceOf(account), months);
   }
 
   /**
-    * @dev only owner can remove time lock
+    * @dev only owner can remove investor lock
     */
   function removeInvestorLock(address account) public onlyOwner whenNotPaused {
     _removeInvestorLock(account);
