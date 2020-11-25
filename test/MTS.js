@@ -145,7 +145,7 @@ contract("MTS", (accounts) => {
     });
   });
   describe("4. locker test", () => {
-    it("4-1 should lock and unlock properly by owner", async () => {
+    it("4-1 should add and remove locker properly by owner", async () => {
       let mts = await MTS.deployed();
       let isLocker = false;
       isLocker = await mts.isLocker(locker);
@@ -184,7 +184,7 @@ contract("MTS", (accounts) => {
       } catch (e) {}
       balance = await mts.balanceOf(locked);
       assert.equal(lockedAmount, balance.valueOf(), "transferred");
-      await mts.unlock(locked, { from: owner });
+      await mts.unlock(locked, { from: locker });
       await mts.transfer(owner, lockedAmount, { from: locked });
       balance = await mts.balanceOf(locked);
       assert.equal(0, balance.valueOf(), "transferred");
@@ -276,11 +276,11 @@ contract("MTS", (accounts) => {
       );
       assert.equal(timeLockInfo[1], now + 600, "expiredAt is not set well");
       try {
-        await mts.removeTimeLock(locked, 2, { from: locker });
+        await mts.removeTimeLock(locked, 2, { from: owner });
       } catch (e) {}
       timeLockLength = await mts.getTimeLockLength(locked);
       assert.equal(timeLockLength, 4, "time locked: 4 time");
-      await mts.removeTimeLock(locked, 1, { from: owner });
+      await mts.removeTimeLock(locked, 1, { from: locker });
       timeLockLength = await mts.getTimeLockLength(locked);
       assert.equal(timeLockLength, 3, "time locked: 3 time");
       timeLockInfo = await mts.getTimeLock(locked, 0);
@@ -310,7 +310,7 @@ contract("MTS", (accounts) => {
         lockedAmount * 3 + 500,
         "time locked amount is different"
       );
-      await mts.removeTimeLock(locked, 2, { from: owner });
+      await mts.removeTimeLock(locked, 2, { from: locker });
       timeLockLength = await mts.getTimeLockLength(locked);
       assert.equal(timeLockLength, 2, "time locked: 2 time");
       timeLockInfo = await mts.getTimeLock(locked, 0);
@@ -333,7 +333,7 @@ contract("MTS", (accounts) => {
         lockedAmount * 2 + 300,
         "time locked amount is different"
       );
-      await mts.removeTimeLock(locked, 0, { from: owner });
+      await mts.removeTimeLock(locked, 0, { from: locker });
       timeLockLength = await mts.getTimeLockLength(locked);
       assert.equal(timeLockLength, 1, "time locked: 2 time");
       timeLockInfo = await mts.getTimeLock(locked, 0);
@@ -504,7 +504,7 @@ contract("MTS", (accounts) => {
       } catch (e) {}
       balance = await mts.balanceOf(locked);
       assert.equal(lockedAmount, balance.valueOf(), "transferred");
-      await mts.unlock(locked, { from: owner });
+      await mts.unlock(locked, { from: locker });
       await mts.transfer(owner, lockedAmount, { from: locked });
       balance = await mts.balanceOf(locked);
       assert.equal(0, balance.valueOf(), "transferred");
@@ -596,11 +596,11 @@ contract("MTS", (accounts) => {
       );
       assert.equal(timeLockInfo[1], now + 600, "expiredAt is not set well");
       try {
-        await mts.removeTimeLock(locked, 2, { from: locker });
+        await mts.removeTimeLock(locked, 2, { from: owner });
       } catch (e) {}
       timeLockLength = await mts.getTimeLockLength(locked);
       assert.equal(timeLockLength, 4, "time locked: 4 time");
-      await mts.removeTimeLock(locked, 1, { from: owner });
+      await mts.removeTimeLock(locked, 1, { from: locker });
       timeLockLength = await mts.getTimeLockLength(locked);
       assert.equal(timeLockLength, 3, "time locked: 3 time");
       timeLockInfo = await mts.getTimeLock(locked, 0);
@@ -630,7 +630,7 @@ contract("MTS", (accounts) => {
         lockedAmount * 3 + 500,
         "time locked amount is different"
       );
-      await mts.removeTimeLock(locked, 2, { from: owner });
+      await mts.removeTimeLock(locked, 2, { from: locker });
       timeLockLength = await mts.getTimeLockLength(locked);
       assert.equal(timeLockLength, 2, "time locked: 2 time");
       timeLockInfo = await mts.getTimeLock(locked, 0);
@@ -653,7 +653,7 @@ contract("MTS", (accounts) => {
         lockedAmount * 2 + 300,
         "time locked amount is different"
       );
-      await mts.removeTimeLock(locked, 0, { from: owner });
+      await mts.removeTimeLock(locked, 0, { from: locker });
       timeLockLength = await mts.getTimeLockLength(locked);
       assert.equal(timeLockLength, 1, "time locked: 2 time");
       timeLockInfo = await mts.getTimeLock(locked, 0);
@@ -820,7 +820,7 @@ contract("MTS", (accounts) => {
         "investor locked months is not set well"
       );
       try {
-        await mts.removeInvestorLock(locked, { from: locker });
+        await mts.removeInvestorLock(locked, { from: owner });
       } catch (e) {}
       investorLockInfo = await mts.getInvestorLock(locked);
       assert.equal(
@@ -835,7 +835,7 @@ contract("MTS", (accounts) => {
         "investor locked amount is different"
       );
       try {
-        await mts.removeInvestorLock(locked, { from: owner });
+        await mts.removeInvestorLock(locked, { from: locker });
       } catch (e) {}
       investorLockInfo = await mts.getInvestorLock(locked);
       assert.equal(

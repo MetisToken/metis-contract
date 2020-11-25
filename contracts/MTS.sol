@@ -47,7 +47,7 @@ library Address {
     * ====
     */
   function isContract(address account) internal view returns (bool) {
-    // This method relies on extcodesize, which returns 0 for contracts in
+    // This method relies in extcodesize, which returns 0 for contracts in
     // construction, since the code is only stored at the end of the
     // constructor execution.
 
@@ -970,7 +970,7 @@ contract Lockable is Context {
   }
 
   /**
-    * @dev Unlock account, only owner can unlock
+    * @dev Unlock account, only locker can unlock
     */
   function _unlock(address account) internal {
     _locks[account] = false;
@@ -988,8 +988,8 @@ contract Lockable is Context {
   }
 
   /**
-    * @dev Remove time lock, only owner can remove
-    * @param account The address want to know the time lock state.
+    * @dev Remove time lock, only locker can remove
+    * @param account The address want to remove time lock
     * @param index Time lock index
     */
   function _removeTimeLock(address account, uint8 index) internal {
@@ -1052,8 +1052,8 @@ contract Lockable is Context {
   }
 
   /**
-    * @dev Remove investor lock, only owner can remove
-    * @param account The address want to know the investor lock state.
+    * @dev Remove investor lock, only locker can remove
+    * @param account The address want to remove the investor lock
     */
   function _removeInvestorLock(address account) internal {
     _investorLocks[account] = InvestorLock(0, 0, 0);
@@ -1121,6 +1121,7 @@ contract MTS is Pausable, Ownable, Burnable, Lockable, ERC20 {
 
     require(!isLocked(from), "Lockable: token transfer from locked account");
     require(!isLocked(to), "Lockable: token transfer to locked account");
+    require(!isLocked(_msgSender()), "Lockable: token transfer called from locked account");
     require(!paused(), "Pausable: token transfer while paused");
     require(balanceOf(from).sub(getTimeLockedAmount(from)).sub(getInvestorLockedAmount(from)) >= amount, "Lockable: token transfer from time and investor locked account");
   }
@@ -1196,9 +1197,9 @@ contract MTS is Pausable, Ownable, Burnable, Lockable, ERC20 {
   }
 
   /**
-    * @dev only owner can unlock account, not locker
+    * @dev only locker can unlock account
     */
-  function unlock(address account) public onlyOwner whenNotPaused {
+  function unlock(address account) public onlyLocker whenNotPaused {
     _unlock(account);
   }
 
@@ -1210,9 +1211,9 @@ contract MTS is Pausable, Ownable, Burnable, Lockable, ERC20 {
   }
 
   /**
-    * @dev only owner can remove time lock
+    * @dev only locker can remove time lock
     */
-  function removeTimeLock(address account, uint8 index) public onlyOwner whenNotPaused {
+  function removeTimeLock(address account, uint8 index) public onlyLocker whenNotPaused {
     _removeTimeLock(account, index);
   }
 
@@ -1224,9 +1225,9 @@ contract MTS is Pausable, Ownable, Burnable, Lockable, ERC20 {
   }
 
   /**
-    * @dev only owner can remove investor lock
+    * @dev only locker can remove investor lock
     */
-  function removeInvestorLock(address account) public onlyOwner whenNotPaused {
+  function removeInvestorLock(address account) public onlyLocker whenNotPaused {
     _removeInvestorLock(account);
   }
 }
